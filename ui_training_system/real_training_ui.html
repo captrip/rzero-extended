@@ -701,7 +701,7 @@
                         <div class="metric-label">Loss</div>
                     </div>
                     <div class="metric">
-                        <div class="metric-value" id="learningRate">N/A</div>
+                        <div class="metric-value" id="learningRateDisplay">N/A</div>
                         <div class="metric-label">Learning Rate</div>
                     </div>
                     <div class="metric">
@@ -802,7 +802,8 @@
                             </div>
                             <div class="form-group">
                                 <label>Learning Rate:</label>
-                                <input type="number" id="learningRate" value="0.000005" step="0.000001" min="0.000001" max="0.001">
+                                <input type="number" id="learningRate" value="0.00001" step="0.000001" min="0.000001" max="0.001" placeholder="0.00001">
+                                <small style="color: #999; font-size: 0.8em;">Typical range: 0.00001 to 0.0001</small>
                             </div>
                             <div class="form-group">
                                 <label>Batch Size:</label>
@@ -1078,7 +1079,7 @@
             document.getElementById('totalIterations').textContent = status.total_iterations;
             document.getElementById('currentPhase').textContent = status.current_phase.replace(/_/g, ' ');
             document.getElementById('lossValue').textContent = status.loss ? status.loss.toFixed(4) : 'N/A';
-            document.getElementById('learningRate').textContent = status.learning_rate ? status.learning_rate.toExponential(2) : 'N/A';
+            document.getElementById('learningRateDisplay').textContent = status.learning_rate ? status.learning_rate.toExponential(2) : 'N/A';
             document.getElementById('currentStep').textContent = status.current_step;
             document.getElementById('totalSteps').textContent = status.total_steps;
             document.getElementById('throughput').textContent = status.throughput ? status.throughput.toFixed(2) : 'N/A';
@@ -1218,15 +1219,25 @@
                 return;
             }
             
+            // Parse and validate form inputs
+            const learningRateValue = document.getElementById('learningRate').value;
+            const parsedLearningRate = parseFloat(learningRateValue);
+            
+            // Validate learning rate
+            if (isNaN(parsedLearningRate) || parsedLearningRate <= 0) {
+                addLog(`❌ Invalid learning rate: "${learningRateValue}". Please enter a valid positive number (e.g., 0.00001)`);
+                return;
+            }
+
             const config = {
                 base_model: selectedModel,
-                experiment_name: document.getElementById('experimentName').value,
-                num_iterations: parseInt(document.getElementById('numIterations').value),
-                questions_per_iteration: parseInt(document.getElementById('questionsPerIteration').value),
-                max_steps_questioner: parseInt(document.getElementById('questionerSteps').value),
-                max_steps_solver: parseInt(document.getElementById('solverSteps').value),
-                learning_rate: parseFloat(document.getElementById('learningRate').value),
-                batch_size: parseInt(document.getElementById('batchSize').value),
+                experiment_name: document.getElementById('experimentName').value || 'unnamed_experiment',
+                num_iterations: parseInt(document.getElementById('numIterations').value) || 3,
+                questions_per_iteration: parseInt(document.getElementById('questionsPerIteration').value) || 50,
+                max_steps_questioner: parseInt(document.getElementById('questionerSteps').value) || 100,
+                max_steps_solver: parseInt(document.getElementById('solverSteps').value) || 100,
+                learning_rate: parsedLearningRate,
+                batch_size: parseInt(document.getElementById('batchSize').value) || 4,
                 mixed_precision: document.getElementById('mixedPrecision').checked,
                 gradient_checkpointing: document.getElementById('gradientCheckpointing').checked
             };

@@ -1,1 +1,4 @@
 tokens.json
+
+# Model storage - changes frequently, not needed in repo
+ui_training_system/storage/models/
