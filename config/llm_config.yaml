@@ -1,0 +1,46 @@
+# LLM Configuration for R-Zero Framework
+# This file defines different model providers for evaluation and generation
+
+evaluation_models:
+  # Primary evaluation model (used for checking answers)
+  primary:
+    provider: "ollama"  # Options: "openai", "docker", "ollama" 
+    config:
+      base_url: "http://localhost:11434"
+      model_name: "deepseek-r1:1.5b"
+  
+  # Fallback evaluation models (tried if primary fails)
+  fallback:
+    - provider: "docker"
+      config:
+        base_url: "http://localhost:12434/engines/llama.cpp/v1"
+        model_name: "llama3.2"
+    - provider: "openai"
+      config:
+        base_url: "https://api.openai.com/v1"
+        model_name: "gpt-4o"
+        api_key: "${OPENAI_API_KEY}"  # Will be replaced by environment variable
+
+# Generation models (for question generation and solving)
+generation_models:
+  challenger:
+    provider: "openai"
+    config:
+      base_url: "http://localhost:12434/engines/llama.cpp/v1"
+      model_name: "ai/llama3.2"
+  
+  solver:
+    provider: "openai"
+    config:
+      base_url: "http://localhost:12434/engines/llama.cpp/v1"  
+      model_name: "ai/llama3.2"
+
+# Timeout settings (in seconds)
+timeouts:
+  evaluation: 30
+  generation: 60
+  
+# Retry settings
+retry:
+  max_attempts: 3
+  backoff_factor: 2.0

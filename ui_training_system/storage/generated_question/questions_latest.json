@@ -1,0 +1,62 @@
+[
+    {
+        "question": "What is the result of 15 + 23?",
+        "answer": "38",
+        "difficulty": "easy",
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "Calculate the value of 7 × 9",
+        "answer": "63", 
+        "difficulty": "easy",
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "What is 144 divided by 12?",
+        "answer": "12",
+        "difficulty": "medium",
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "Find the square root of 81",
+        "answer": "9",
+        "difficulty": "medium", 
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "What is 2^5 (2 to the power of 5)?",
+        "answer": "32",
+        "difficulty": "medium",
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "Calculate 25% of 200",
+        "answer": "50",
+        "difficulty": "medium",
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "What is the next prime number after 17?",
+        "answer": "19",
+        "difficulty": "hard",
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "Solve: 3x + 7 = 22. What is x?",
+        "answer": "5",
+        "difficulty": "hard",
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "What is the area of a circle with radius 5? (Use π ≈ 3.14)",
+        "answer": "78.5",
+        "difficulty": "hard",
+        "generated_by": "questioner_v1"
+    },
+    {
+        "question": "What is the factorial of 5 (5!)?",
+        "answer": "120",
+        "difficulty": "hard",
+        "generated_by": "questioner_v1"
+    }
+]

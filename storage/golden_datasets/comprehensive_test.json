@@ -1,0 +1,42 @@
+[
+  {
+    "question": "What is 15 + 27?",
+    "answer": "42",
+    "dataset": "arithmetic_basic"
+  },
+  {
+    "question": "Calculate 144 \u00f7 12",
+    "answer": "12",
+    "dataset": "arithmetic_basic"
+  },
+  {
+    "question": "If 3x + 7 = 22, what is x?",
+    "answer": "5",
+    "dataset": "algebra_intermediate"
+  },
+  {
+    "question": "Solve for y: 2y - 5 = 11",
+    "answer": "8",
+    "dataset": "algebra_intermediate"
+  },
+  {
+    "question": "What is the square root of 64?",
+    "answer": "8",
+    "dataset": "geometry_advanced"
+  },
+  {
+    "question": "What is the square root of 144?",
+    "answer": "12",
+    "dataset": "geometry_advanced"
+  },
+  {
+    "question": "Sarah has 15 apples. She gives away 7 and buys 12 more. How many apples does she have?",
+    "answer": "20",
+    "dataset": "word_problems"
+  },
+  {
+    "question": "A train travels 60 miles in 2 hours. What is its average speed in miles per hour?",
+    "answer": "30",
+    "dataset": "word_problems"
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "question": "What is 15 + 27?",
+    "answer": "42"
+  },
+  {
+    "question": "Calculate 144 \u00f7 12",
+    "answer": "12"
+  },
+  {
+    "question": "What is 8 \u00d7 9?",
+    "answer": "72"
+  },
+  {
+    "question": "What is 100 - 37?",
+    "answer": "63"
+  },
+  {
+    "question": "Calculate 7 \u00d7 6",
+    "answer": "42"
+  }
+]

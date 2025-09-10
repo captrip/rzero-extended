@@ -1,0 +1,22 @@
+[
+  {
+    "question": "If 3x + 7 = 22, what is x?",
+    "answer": "5"
+  },
+  {
+    "question": "Solve for y: 2y - 5 = 11",
+    "answer": "8"
+  },
+  {
+    "question": "If 4a + 3 = 19, what is a?",
+    "answer": "4"
+  },
+  {
+    "question": "What is x if 5x - 8 = 17?",
+    "answer": "5"
+  },
+  {
+    "question": "Solve: 3(x + 2) = 21",
+    "answer": "5"
+  }
+]

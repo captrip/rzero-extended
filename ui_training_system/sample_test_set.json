@@ -1,0 +1,42 @@
+[
+    {
+        "question": "What is 2 + 2?",
+        "answer": "4"
+    },
+    {
+        "question": "What is the capital of France?",
+        "answer": "Paris"
+    },
+    {
+        "question": "What is 5 * 6?",
+        "answer": "30"
+    },
+    {
+        "question": "What is the square root of 16?",
+        "answer": "4"
+    },
+    {
+        "question": "What is 10 - 3?",
+        "answer": "7"
+    },
+    {
+        "question": "What is the next number in the sequence: 1, 2, 4, 8, ...?",
+        "answer": "16"
+    },
+    {
+        "question": "What is 15 divided by 3?",
+        "answer": "5"
+    },
+    {
+        "question": "What is 3 to the power of 2?",
+        "answer": "9"
+    },
+    {
+        "question": "What is the sum of the first 3 positive integers?",
+        "answer": "6"
+    },
+    {
+        "question": "What is 100 - 25?",
+        "answer": "75"
+    }
+]

@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real R-Zero Training System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            margin: 10px 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .system-status {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .system-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .system-item {
+            background: rgba(0,0,0,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .card h3 {
+            margin: 0 0 15px 0;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .status-idle { background: #6c757d; }
+        .status-running { background: #28a745; animation: pulse 2s infinite; }
+        .status-completed { background: #17a2b8; }
+        .status-error { background: #dc3545; }
+        .status-downloading_model { background: #fd7e14; animation: pulse 2s infinite; }
+        .status-loading_model { background: #6f42c1; animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            transition: width 0.3s ease;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background: #ffd700;
+            color: #1e3c72;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: #ffed4e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,215,0,0.4);
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            color: #aaa;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            background: #c82333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1em;
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .form-group select option {
+            background: #1e3c72;
+            color: white;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+        }
+        
+        .metric-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        .metric-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+        
+        .logs {
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .config-form {
+            display: none;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .config-form.active {
+            display: block;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        .connected {
+            background: #28a745;
+            color: white;
+        }
+        
+        .disconnected {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .model-info {
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        
+        .gpu-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .gpu-available { background: #28a745; }
+        .gpu-unavailable { background: #dc3545; }
+        
+        .advanced-options {
+            border-top: 1px solid rgba(255,255,255,0.2);
+            margin-top: 20px;
+            padding-top: 20px;
+        }
+        
+        .toggle-advanced {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        
+        .advanced-options.collapsed .advanced-content {
+            display: none;
+        }
+
+        /* Questions Inspector Styles */
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .questions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .question-count {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .questions-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .question-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .question-header {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .question-header:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .question-text {
+            font-weight: 500;
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .question-toggle {
+            font-size: 1.2em;
+            transition: transform 0.2s ease;
+        }
+
+        .question-item.expanded .question-toggle {
+            transform: rotate(180deg);
+        }
+
+        .question-content {
+            display: none;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .question-item.expanded .question-content {
+            display: block;
+        }
+
+        .answer-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .answer-label {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .answer-text {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        /* Test Set Upload Styles */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .test-sets-list {
+            margin-top: 20px;
+        }
+
+        .test-set-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .test-set-info h4 {
+            margin: 0 0 5px 0;
+            color: #ffd700;
+        }
+
+        .test-set-info p {
+            margin: 0;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Evaluation Styles */
+        .eval-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .eval-controls select {
+            flex: 1;
+        }
+
+        .evaluation-results {
+            margin-top: 20px;
+        }
+
+        .eval-summary {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .eval-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .eval-metric {
+            text-align: center;
+        }
+
+        .eval-metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .eval-metric-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .eval-details {
+            margin-top: 20px;
+        }
+
+        .eval-question-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .eval-question-header {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .eval-question-content {
+            display: none;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .eval-question-item.expanded .eval-question-content {
+            display: block;
+        }
+
+        .correct {
+            color: #4caf50;
+        }
+
+        .incorrect {
+            color: #f44336;
+        }
+
+        /* Enhanced Model Selection Styles */
+        .model-selection {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .model-mode-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .mode-tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .mode-tab.active {
+            background: #ffd700;
+            color: #1e3c72;
+            font-weight: bold;
+        }
+
+        .model-section {
+            transition: all 0.3s ease;
+        }
+
+        .custom-model-info {
+            margin-top: 15px;
+        }
+
+        .help-text {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .help-text code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #ffd700;
+        }
+
+        .validation-status {
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .validation-status.valid {
+            display: block;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            color: #4caf50;
+        }
+
+        .validation-status.invalid {
+            display: block;
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+            color: #f44336;
+        }
+
+        .validation-status.checking {
+            display: block;
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+        }
+
+        /* Enhanced input styles */
+        #customModelPath {
+            width: 100%;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .model-info {
+            margin-top: 15px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .model-info h5 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+        }
+
+        .model-info p {
+            margin: 4px 0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">Connecting...</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Real R-Zero Training System</h1>
+            <p>Advanced Language Model Training with GRPO Optimization</p>
+        </div>
+        
+        <div class="system-status" id="systemStatus">
+            <div class="system-info">
+                <div class="system-item">
+                    <span class="gpu-indicator" id="gpuIndicator"></span>
+                    <span id="gpuStatus">Checking GPU...</span>
+                </div>
+                <div class="system-item" id="memoryStatus">Memory: Checking...</div>
+                <div class="system-item" id="serverStatus">Server: Connected</div>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h3>🎯 Training Status</h3>
+                <div class="status-indicator" id="statusIndicator">IDLE</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div id="progressText">Ready to start training</div>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="currentIteration">0</div>
+                        <div class="metric-label">Current Iteration</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="totalIterations">0</div>
+                        <div class="metric-label">Total Iterations</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="currentPhase">Idle</div>
+                        <div class="metric-label">Current Phase</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📊 Training Metrics</h3>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="lossValue">N/A</div>
+                        <div class="metric-label">Loss</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="learningRate">N/A</div>
+                        <div class="metric-label">Learning Rate</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="currentStep">0</div>
+                        <div class="metric-label">Current Step</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="totalSteps">0</div>
+                        <div class="metric-label">Total Steps</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="throughput">N/A</div>
+                        <div class="metric-label">Steps/Sec</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="gpuMemory">N/A</div>
+                        <div class="metric-label">GPU Memory (GB)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>🎮 Training Control</h3>
+                <div class="controls">
+                    <button class="btn" id="startBtn" onclick="showConfigForm()">Start Real Training</button>
+                    <button class="btn" id="pauseBtn" onclick="pauseTraining()" disabled>Pause</button>
+                    <button class="btn" id="resumeBtn" onclick="resumeTraining()" disabled>Resume</button>
+                    <button class="btn btn-danger" id="stopBtn" onclick="stopTraining()" disabled>Stop</button>
+                </div>
+                
+                <div class="config-form" id="configForm">
+                    <h4>Real Training Configuration</h4>
+                    
+                    <div class="form-group">
+                        <label>Base Model:</label>
+                        <div class="model-selection">
+                            <div class="model-mode-tabs">
+                                <button type="button" class="mode-tab active" onclick="switchModelMode('preset')" id="presetTab">
+                                    📋 Preset Models
+                                </button>
+                                <button type="button" class="mode-tab" onclick="switchModelMode('custom')" id="customTab">
+                                    ⚙️ Custom Model
+                                </button>
+                            </div>
+                            
+                            <div id="presetModelSection" class="model-section">
+                                <select id="baseModel" onchange="updateModelInfo()">
+                                    <option value="">Loading models...</option>
+                                </select>
+                                <div class="model-info" id="modelInfo" style="display: none;"></div>
+                            </div>
+                            
+                            <div id="customModelSection" class="model-section" style="display: none;">
+                                <input type="text" id="customModelPath" class="input" 
+                                       placeholder="Enter HuggingFace model path (e.g., microsoft/DialoGPT-small)"
+                                       onchange="validateCustomModel()">
+                                <div class="custom-model-info" id="customModelInfo">
+                                    <p class="help-text">
+                                        💡 <strong>Examples:</strong><br>
+                                        • <code>microsoft/DialoGPT-small</code><br>
+                                        • <code>facebook/opt-125m</code><br>
+                                        • <code>EleutherAI/gpt-neo-125M</code><br>
+                                        • <code>your-username/your-custom-model</code>
+                                    </p>
+                                    <div class="validation-status" id="customModelValidation"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Experiment Name:</label>
+                        <input type="text" id="experimentName" value="real-rzero-experiment" placeholder="Experiment name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Number of Iterations:</label>
+                        <input type="number" id="numIterations" value="2" min="1" max="5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Questions per Iteration:</label>
+                        <input type="number" id="questionsPerIteration" value="30" min="10" max="200">
+                    </div>
+                    
+                    <div class="advanced-options collapsed" id="advancedOptions">
+                        <button type="button" class="toggle-advanced" onclick="toggleAdvanced()">
+                            Show Advanced Options
+                        </button>
+                        <div class="advanced-content">
+                            <div class="form-group">
+                                <label>Questioner Training Steps:</label>
+                                <input type="number" id="questionerSteps" value="15" min="5" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label>Solver Training Steps:</label>
+                                <input type="number" id="solverSteps" value="30" min="10" max="200">
+                            </div>
+                            <div class="form-group">
+                                <label>Learning Rate:</label>
+                                <input type="number" id="learningRate" value="0.000005" step="0.000001" min="0.000001" max="0.001">
+                            </div>
+                            <div class="form-group">
+                                <label>Batch Size:</label>
+                                <input type="number" id="batchSize" value="2" min="1" max="8">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="mixedPrecision" checked> Use Mixed Precision (Recommended)
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="gradientCheckpointing" checked> Gradient Checkpointing (Save Memory)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button class="btn" onclick="startRealTraining()">Start Real Training</button>
+                        <button class="btn btn-danger" onclick="hideConfigForm()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>📝 Training Logs</h3>
+            <div class="logs" id="trainingLogs">
+                <div class="log-entry">Real R-Zero Training System initialized. GPU acceleration ready.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions & Answers Inspector -->
+    <div class="dashboard" style="margin-top: 20px;">
+        <div class="card full-width">
+            <h3>🔍 Questions & Answers Inspector</h3>
+            <div class="questions-section">
+                <div class="questions-header">
+                    <button class="btn secondary" onclick="loadTrainingQuestions()">Load Training Questions</button>
+                    <span class="question-count" id="questionCount">0 questions loaded</span>
+                </div>
+                <div class="questions-container" id="questionsContainer">
+                    <div class="empty-state">Click "Load Training Questions" to view challenger questions and solver answers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Set Upload & Evaluation -->
+    <div class="dashboard" style="margin-top: 20px;">
+        <div class="card">
+            <h3>📊 Custom Test Sets</h3>
+            <div class="test-upload-section">
+                <div class="upload-area" onclick="document.getElementById('testSetFile').click()">
+                    <input type="file" id="testSetFile" accept=".json" style="display: none;" onchange="uploadTestSet()">
+                    <div class="upload-icon">📁</div>
+                    <p>Click to upload custom test set (JSON format)</p>
+                    <small>Expected format: [{"question": "...", "answer": "..."}]</small>
+                </div>
+                <div class="test-sets-list" id="testSetsList"></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>🎯 Evaluation Results</h3>
+            <div class="evaluation-section">
+                <div class="eval-controls">
+                    <select id="testSetSelector" class="input">
+                        <option value="">Select test set to evaluate</option>
+                    </select>
+                    <button class="btn primary" onclick="runEvaluation()">Run Evaluation</button>
+                </div>
+                <div class="evaluation-results" id="evaluationResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let currentStatus = null;
+        let availableModels = [];
+        let systemInfo = null;
+        
+        // API base URL for real training
+        const API_BASE = 'http://127.0.0.1:8001';
+        
+        // Initialize the application
+        function init() {
+            loadSystemInfo();
+            loadAvailableModels();
+            connectWebSocket();
+            loadInitialStatus();
+            setInterval(updateStatus, 3000); // Update every 3 seconds
+        }
+        
+        // Load system information
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/system_info`);
+                systemInfo = await response.json();
+                updateSystemStatus();
+            } catch (error) {
+                console.error('Failed to load system info:', error);
+            }
+        }
+        
+        // Update system status display
+        function updateSystemStatus() {
+            if (!systemInfo) return;
+            
+            const gpuIndicator = document.getElementById('gpuIndicator');
+            const gpuStatus = document.getElementById('gpuStatus');
+            const memoryStatus = document.getElementById('memoryStatus');
+            
+            if (systemInfo.cuda_available) {
+                gpuIndicator.className = 'gpu-indicator gpu-available';
+                gpuStatus.textContent = `GPU: ${systemInfo.cuda_device_name} (${systemInfo.cuda_memory_gb.toFixed(1)}GB)`;
+            } else {
+                gpuIndicator.className = 'gpu-indicator gpu-unavailable';
+                gpuStatus.textContent = 'GPU: Not Available (CPU Training)';
+            }
+            
+            memoryStatus.textContent = `RAM: ${systemInfo.memory_gb.toFixed(1)}GB`;
+        }
+        
+        // Load available models
+        async function loadAvailableModels() {
+            try {
+                const response = await fetch(`${API_BASE}/available_models`);
+                const data = await response.json();
+                availableModels = data.models;
+                updateModelSelector();
+            } catch (error) {
+                console.error('Failed to load available models:', error);
+                addLog('Failed to load available models: ' + error);
+            }
+        }
+        
+        // Update model selector
+        function updateModelSelector() {
+            const modelSelect = document.getElementById('baseModel');
+            modelSelect.innerHTML = '';
+            
+            availableModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name;
+                option.textContent = `${model.name} (${model.size})`;
+                modelSelect.appendChild(option);
+            });
+            
+            // Select first model by default
+            if (availableModels.length > 0) {
+                modelSelect.value = availableModels[0].name;
+                updateModelInfo();
+            }
+        }
+        
+        // Update model information display
+        function updateModelInfo() {
+            const modelSelect = document.getElementById('baseModel');
+            const modelInfo = document.getElementById('modelInfo');
+            
+            const selectedModel = availableModels.find(m => m.name === modelSelect.value);
+            
+            if (selectedModel) {
+                modelInfo.innerHTML = `
+                    <strong>${selectedModel.description}</strong><br>
+                    Size: ${selectedModel.size} parameters<br>
+                    Recommended Batch Size: ${selectedModel.recommended_batch_size}<br>
+                    Memory Requirement: ${selectedModel.memory_requirement}
+                `;
+                modelInfo.style.display = 'block';
+                
+                // Update batch size recommendation
+                document.getElementById('batchSize').value = selectedModel.recommended_batch_size;
+            } else {
+                modelInfo.style.display = 'none';
+            }
+        }
+        
+        // Toggle advanced options
+        function toggleAdvanced() {
+            const advancedOptions = document.getElementById('advancedOptions');
+            const button = advancedOptions.querySelector('.toggle-advanced');
+            
+            if (advancedOptions.classList.contains('collapsed')) {
+                advancedOptions.classList.remove('collapsed');
+                button.textContent = 'Hide Advanced Options';
+            } else {
+                advancedOptions.classList.add('collapsed');
+                button.textContent = 'Show Advanced Options';
+            }
+        }
+        
+        // Connect to WebSocket
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket('ws://127.0.0.1:8001/ws');
+                
+                ws.onopen = function() {
+                    updateConnectionStatus(true);
+                    addLog('Connected to real training system');
+                };
+                
+                ws.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'training_status') {
+                        updateStatusDisplay(data.data);
+                    }
+                };
+                
+                ws.onclose = function() {
+                    updateConnectionStatus(false);
+                    addLog('Disconnected from training system');
+                    setTimeout(connectWebSocket, 3000);
+                };
+                
+                ws.onerror = function(error) {
+                    updateConnectionStatus(false);
+                    addLog('WebSocket error: ' + error);
+                };
+            } catch (error) {
+                updateConnectionStatus(false);
+                addLog('Failed to connect WebSocket: ' + error);
+            }
+        }
+        
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.textContent = connected ? 'Connected' : 'Disconnected';
+            statusEl.className = 'connection-status ' + (connected ? 'connected' : 'disconnected');
+        }
+        
+        // Load initial status
+        async function loadInitialStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/training/status`);
+                const status = await response.json();
+                updateStatusDisplay(status);
+            } catch (error) {
+                addLog('Failed to load initial status: ' + error);
+            }
+        }
+        
+        // Update status display
+        function updateStatusDisplay(status) {
+            currentStatus = status;
+            
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.textContent = status.status.toUpperCase();
+            statusIndicator.className = 'status-indicator status-' + status.status;
+            
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            progressFill.style.width = status.progress_percentage + '%';
+            
+            if (status.status === 'running') {
+                let phaseText = status.current_phase.replace(/_/g, ' ').toUpperCase();
+                progressText.textContent = `${phaseText} - ${status.progress_percentage.toFixed(1)}%`;
+            } else if (status.status === 'downloading_model') {
+                progressText.textContent = `Downloading model - ${status.progress_percentage.toFixed(1)}%`;
+            } else if (status.status === 'loading_model') {
+                progressText.textContent = `Loading model - ${status.progress_percentage.toFixed(1)}%`;
+            } else {
+                progressText.textContent = status.status === 'completed' ? 'Training completed!' : 'Ready to start training';
+            }
+            
+            // Update metrics
+            document.getElementById('currentIteration').textContent = status.current_iteration;
+            document.getElementById('totalIterations').textContent = status.total_iterations;
+            document.getElementById('currentPhase').textContent = status.current_phase.replace(/_/g, ' ');
+            document.getElementById('lossValue').textContent = status.loss ? status.loss.toFixed(4) : 'N/A';
+            document.getElementById('learningRate').textContent = status.learning_rate ? status.learning_rate.toExponential(2) : 'N/A';
+            document.getElementById('currentStep').textContent = status.current_step;
+            document.getElementById('totalSteps').textContent = status.total_steps;
+            document.getElementById('throughput').textContent = status.throughput ? status.throughput.toFixed(2) : 'N/A';
+            document.getElementById('gpuMemory').textContent = status.gpu_memory_used ? status.gpu_memory_used.toFixed(2) : 'N/A';
+            
+            // Update control buttons
+            updateControlButtons(status.status);
+            
+            if (status.error_message) {
+                addLog('ERROR: ' + status.error_message);
+            }
+        }
+        
+        // Update control buttons
+        function updateControlButtons(status) {
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resumeBtn = document.getElementById('resumeBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            [startBtn, pauseBtn, resumeBtn, stopBtn].forEach(btn => btn.disabled = true);
+            
+            switch(status) {
+                case 'idle':
+                case 'completed':
+                case 'error':
+                    startBtn.disabled = false;
+                    break;
+                case 'running':
+                case 'downloading_model':
+                case 'loading_model':
+                    pauseBtn.disabled = false;
+                    stopBtn.disabled = false;
+                    break;
+                case 'paused':
+                    resumeBtn.disabled = false;
+                    stopBtn.disabled = false;
+                    break;
+            }
+        }
+        
+        // Show configuration form
+        function showConfigForm() {
+            document.getElementById('configForm').classList.add('active');
+        }
+        
+        // Hide configuration form
+        function hideConfigForm() {
+            document.getElementById('configForm').classList.remove('active');
+        }
+        
+        // Model selection functions
+        let currentModelMode = 'preset';
+
+        function switchModelMode(mode) {
+            currentModelMode = mode;
+            
+            // Update tabs
+            document.getElementById('presetTab').classList.toggle('active', mode === 'preset');
+            document.getElementById('customTab').classList.toggle('active', mode === 'custom');
+            
+            // Update sections
+            document.getElementById('presetModelSection').style.display = mode === 'preset' ? 'block' : 'none';
+            document.getElementById('customModelSection').style.display = mode === 'custom' ? 'block' : 'none';
+            
+            // Clear validation when switching modes
+            if (mode === 'custom') {
+                document.getElementById('customModelValidation').className = 'validation-status';
+            }
+        }
+
+        async function validateCustomModel() {
+            const customModelPath = document.getElementById('customModelPath').value.trim();
+            const validationStatus = document.getElementById('customModelValidation');
+            
+            if (!customModelPath) {
+                validationStatus.className = 'validation-status';
+                return;
+            }
+            
+            // Show checking status
+            validationStatus.className = 'validation-status checking';
+            validationStatus.textContent = '🔄 Validating model with HuggingFace Hub...';
+            
+            try {
+                // First do basic format validation
+                const modelPathRegex = /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$|^[a-zA-Z0-9._-]+$/;
+                
+                if (!modelPathRegex.test(customModelPath)) {
+                    throw new Error('Invalid model path format');
+                }
+                
+                // Call the validation API
+                const response = await fetch(`${API_BASE}/validate_model/${encodeURIComponent(customModelPath)}`);
+                const validation = await response.json();
+                
+                if (validation.valid && validation.exists) {
+                    validationStatus.className = 'validation-status valid';
+                    let message = `✅ <strong>${validation.name}</strong> is available on HuggingFace!<br>`;
+                    message += `📝 ${validation.description}<br>`;
+                    message += `🏷️ Tags: ${validation.tags?.join(', ') || 'None'}<br>`;
+                    message += `📚 Library: ${validation.library}<br>`;
+                    message += `⬇️ Downloads: ${validation.downloads?.toLocaleString() || 'Unknown'}<br>`;
+                    if (!validation.compatible) {
+                        message += `⚠️ <em>Note: This model may not be optimized for text generation tasks.</em>`;
+                    }
+                    validationStatus.innerHTML = message;
+                } else {
+                    validationStatus.className = 'validation-status invalid';
+                    validationStatus.innerHTML = `❌ <strong>${customModelPath}</strong> not found on HuggingFace.<br>Error: ${validation.error || 'Model does not exist'}`;
+                }
+                
+            } catch (error) {
+                validationStatus.className = 'validation-status invalid';
+                if (error.message === 'Invalid model path format') {
+                    validationStatus.innerHTML = `❌ Invalid model path format.<br>Expected format: <code>username/model-name</code> or <code>model-name</code>`;
+                } else {
+                    validationStatus.innerHTML = `❌ Failed to validate model: ${error.message}<br>The model path appears valid but couldn't be verified online.`;
+                }
+            }
+        }
+
+        function getSelectedModel() {
+            if (currentModelMode === 'custom') {
+                return document.getElementById('customModelPath').value.trim();
+            } else {
+                return document.getElementById('baseModel').value;
+            }
+        }
+
+        // Start real training
+        async function startRealTraining() {
+            const selectedModel = getSelectedModel();
+            
+            if (!selectedModel) {
+                addLog('❌ Please select or enter a base model');
+                return;
+            }
+            
+            const config = {
+                base_model: selectedModel,
+                experiment_name: document.getElementById('experimentName').value,
+                num_iterations: parseInt(document.getElementById('numIterations').value),
+                questions_per_iteration: parseInt(document.getElementById('questionsPerIteration').value),
+                max_steps_questioner: parseInt(document.getElementById('questionerSteps').value),
+                max_steps_solver: parseInt(document.getElementById('solverSteps').value),
+                learning_rate: parseFloat(document.getElementById('learningRate').value),
+                batch_size: parseInt(document.getElementById('batchSize').value),
+                mixed_precision: document.getElementById('mixedPrecision').checked,
+                gradient_checkpointing: document.getElementById('gradientCheckpointing').checked
+            };
+            
+            if (!config.base_model) {
+                addLog('Please select a base model');
+                return;
+            }
+            
+            try {
+                addLog(`Starting real training with ${config.base_model}...`);
+                const response = await fetch(`${API_BASE}/training/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (!response.ok) {
+                    // Handle HTTP error responses
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.detail) {
+                            if (Array.isArray(errorData.detail)) {
+                                // Validation errors
+                                errorMessage = errorData.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join('; ');
+                            } else {
+                                errorMessage = errorData.detail;
+                            }
+                        } else if (errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                    } catch {
+                        // Ignore JSON parsing errors, use the HTTP error message
+                    }
+                    addLog(`❌ Failed to start training: ${errorMessage}`);
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog(`✅ Training started successfully: ${config.experiment_name}`);
+                    addLog('📥 Downloading and training real transformer models...');
+                    hideConfigForm();
+                } else {
+                    addLog(`❌ Failed to start training: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                addLog(`❌ Network error starting training: ${error.message}`);
+            }
+        }
+        
+        // Control functions
+        async function pauseTraining() {
+            try {
+                const response = await fetch(`${API_BASE}/training/pause`, { method: 'POST' });
+                const result = await response.json();
+                addLog(result.success ? 'Training paused' : 'Failed to pause: ' + result.message);
+            } catch (error) {
+                addLog('Error pausing training: ' + error);
+            }
+        }
+        
+        async function resumeTraining() {
+            try {
+                const response = await fetch(`${API_BASE}/training/resume`, { method: 'POST' });
+                const result = await response.json();
+                addLog(result.success ? 'Training resumed' : 'Failed to resume: ' + result.message);
+            } catch (error) {
+                addLog('Error resuming training: ' + error);
+            }
+        }
+        
+        async function stopTraining() {
+            if (!confirm('Are you sure you want to stop training? Progress will be saved but training will terminate.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/training/stop`, { method: 'POST' });
+                const result = await response.json();
+                addLog(result.success ? 'Training stop requested' : 'Failed to stop: ' + result.message);
+            } catch (error) {
+                addLog('Error stopping training: ' + error);
+            }
+        }
+        
+        // Update status periodically
+        async function updateStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/training/status`);
+                const status = await response.json();
+                updateStatusDisplay(status);
+            } catch (error) {
+                // Silently fail - WebSocket should handle updates
+            }
+        }
+        
+        // Add log entry
+        function addLog(message) {
+            const logsContainer = document.getElementById('trainingLogs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+            
+            while (logsContainer.children.length > 50) {
+                logsContainer.removeChild(logsContainer.firstChild);
+            }
+        }
+        
+        // Questions & Answers Inspector Functions
+        async function loadTrainingQuestions() {
+            try {
+                const experimentId = currentStatus?.experiment_id || 'latest';
+                const response = await fetch(`${API_BASE}/training/questions/${experimentId}`);
+                const data = await response.json();
+                
+                const questionsContainer = document.getElementById('questionsContainer');
+                const questionCount = document.getElementById('questionCount');
+                
+                if (data.questions && data.questions.length > 0) {
+                    questionCount.textContent = `${data.questions.length} questions loaded`;
+                    
+                    questionsContainer.innerHTML = data.questions.map((q, index) => `
+                        <div class="question-item" id="question-${index}">
+                            <div class="question-header" onclick="toggleQuestion(${index})">
+                                <div class="question-text">${q.question || `Question ${index + 1}`}</div>
+                                <div class="question-toggle">▼</div>
+                            </div>
+                            <div class="question-content">
+                                <div class="answer-section">
+                                    <div class="answer-label">🤖 Challenger Generated Question:</div>
+                                    <div class="answer-text">${q.question || 'No question available'}</div>
+                                </div>
+                                ${q.answer ? `
+                                <div class="answer-section">
+                                    <div class="answer-label">🎯 Solver Answer:</div>
+                                    <div class="answer-text">${q.answer}</div>
+                                </div>
+                                ` : ''}
+                                ${q.expected_answer ? `
+                                <div class="answer-section">
+                                    <div class="answer-label">✅ Expected Answer:</div>
+                                    <div class="answer-text">${q.expected_answer}</div>
+                                </div>
+                                ` : ''}
+                                ${q.difficulty ? `
+                                <div class="answer-section">
+                                    <div class="answer-label">📊 Difficulty:</div>
+                                    <div class="answer-text">${q.difficulty}</div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    questionCount.textContent = '0 questions loaded';
+                    questionsContainer.innerHTML = '<div class="empty-state">No questions found. Run a training session first.</div>';
+                }
+                
+            } catch (error) {
+                console.error('Failed to load training questions:', error);
+                addLog('Failed to load training questions: ' + error.message);
+            }
+        }
+
+        function toggleQuestion(index) {
+            const questionItem = document.getElementById(`question-${index}`);
+            questionItem.classList.toggle('expanded');
+        }
+
+        // Test Set Upload Functions
+        async function uploadTestSet() {
+            const fileInput = document.getElementById('testSetFile');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch(`${API_BASE}/evaluation/upload_test_set`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog(`✅ ${result.message}`);
+                    loadTestSets();
+                } else {
+                    addLog(`❌ ${result.message}`);
+                }
+                
+                fileInput.value = ''; // Clear the input
+                
+            } catch (error) {
+                console.error('Failed to upload test set:', error);
+                addLog('Failed to upload test set: ' + error.message);
+            }
+        }
+
+        async function loadTestSets() {
+            try {
+                const response = await fetch(`${API_BASE}/evaluation/test_sets`);
+                const data = await response.json();
+                
+                const testSetsList = document.getElementById('testSetsList');
+                const testSetSelector = document.getElementById('testSetSelector');
+                
+                // Update test sets list
+                if (data.test_sets && data.test_sets.length > 0) {
+                    testSetsList.innerHTML = data.test_sets.map(testSet => `
+                        <div class="test-set-item">
+                            <div class="test-set-info">
+                                <h4>${testSet.name}</h4>
+                                <p>${testSet.num_questions} questions • Uploaded ${new Date(testSet.created * 1000).toLocaleDateString()}</p>
+                            </div>
+                            <button class="btn secondary small" onclick="runTestSetEvaluation('${testSet.name}')">
+                                Evaluate
+                            </button>
+                        </div>
+                    `).join('');
+                    
+                    // Update selector
+                    testSetSelector.innerHTML = '<option value="">Select test set to evaluate</option>' + 
+                        data.test_sets.map(testSet => `<option value="${testSet.name}">${testSet.name} (${testSet.num_questions} questions)</option>`).join('');
+                } else {
+                    testSetsList.innerHTML = '<div class="empty-state">No test sets uploaded yet</div>';
+                    testSetSelector.innerHTML = '<option value="">No test sets available</option>';
+                }
+                
+            } catch (error) {
+                console.error('Failed to load test sets:', error);
+                addLog('Failed to load test sets: ' + error.message);
+            }
+        }
+
+        // Evaluation Functions
+        async function runEvaluation() {
+            const testSetSelector = document.getElementById('testSetSelector');
+            const testSetName = testSetSelector.value;
+            
+            if (!testSetName) {
+                addLog('❌ Please select a test set to evaluate');
+                return;
+            }
+            
+            await runTestSetEvaluation(testSetName);
+        }
+
+        async function runTestSetEvaluation(testSetName) {
+            try {
+                addLog(`🔄 Running evaluation on ${testSetName}...`);
+                
+                const response = await fetch(`${API_BASE}/evaluation/run_test/${testSetName}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                displayEvaluationResults(result);
+                addLog(`✅ Evaluation completed: ${(result.accuracy * 100).toFixed(1)}% accuracy`);
+                
+            } catch (error) {
+                console.error('Failed to run evaluation:', error);
+                addLog('Failed to run evaluation: ' + error.message);
+            }
+        }
+
+        function displayEvaluationResults(results) {
+            const evaluationResults = document.getElementById('evaluationResults');
+            
+            evaluationResults.innerHTML = `
+                <div class="eval-summary">
+                    <h4>📊 Evaluation Results: ${results.test_set}</h4>
+                    <div class="eval-metrics">
+                        <div class="eval-metric">
+                            <div class="eval-metric-value">${(results.accuracy * 100).toFixed(1)}%</div>
+                            <div class="eval-metric-label">Accuracy</div>
+                        </div>
+                        <div class="eval-metric">
+                            <div class="eval-metric-value">${results.num_questions}</div>
+                            <div class="eval-metric-label">Questions</div>
+                        </div>
+                        <div class="eval-metric">
+                            <div class="eval-metric-value">${(results.avg_confidence * 100).toFixed(1)}%</div>
+                            <div class="eval-metric-label">Avg Confidence</div>
+                        </div>
+                    </div>
+                    <p>Evaluated on ${new Date(results.timestamp * 1000).toLocaleString()}</p>
+                </div>
+                
+                <div class="eval-details">
+                    <h4>📋 Detailed Results</h4>
+                    ${results.results_by_question.map((result, index) => `
+                        <div class="eval-question-item" id="eval-question-${index}">
+                            <div class="eval-question-header" onclick="toggleEvalQuestion(${index})">
+                                <div class="question-text">${result.question.substring(0, 80)}...</div>
+                                <div class="eval-status ${result.correct ? 'correct' : 'incorrect'}">
+                                    ${result.correct ? '✅' : '❌'} ${(result.confidence * 100).toFixed(0)}%
+                                </div>
+                            </div>
+                            <div class="eval-question-content">
+                                <div class="answer-section">
+                                    <div class="answer-label">❓ Question:</div>
+                                    <div class="answer-text">${result.question}</div>
+                                </div>
+                                <div class="answer-section">
+                                    <div class="answer-label">✅ Expected Answer:</div>
+                                    <div class="answer-text">${result.expected_answer}</div>
+                                </div>
+                                <div class="answer-section">
+                                    <div class="answer-label">🤖 Model Answer:</div>
+                                    <div class="answer-text">${result.model_answer}</div>
+                                </div>
+                                <div class="answer-section">
+                                    <div class="answer-label">📊 Confidence:</div>
+                                    <div class="answer-text">${(result.confidence * 100).toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function toggleEvalQuestion(index) {
+            const questionItem = document.getElementById(`eval-question-${index}`);
+            questionItem.classList.toggle('expanded');
+        }
+
+        // Enhanced initialization
+        function initializeNewFeatures() {
+            loadTestSets();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            initializeNewFeatures();
+        });
+    </script>
+</body>
+</html>
