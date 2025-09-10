@@ -33,6 +33,10 @@ mathruler>=0.1.0                 # Math rule engine
 openai>=1.86.0                   # For GPT evaluations
 latex2sympy2_extended>=1.10.0    # LaTeX to SymPy conversion
 
+# Enhanced Challenger Model Support
+anthropic>=0.42.0                # For Claude models
+stopit>=1.2.0                    # Timeout protection
+
 # Training & Optimization
 peft>=0.15.0                     # Parameter-efficient fine-tuning
 flash-attn>=2.7.0               # Flash attention (GPU acceleration)

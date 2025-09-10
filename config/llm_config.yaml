@@ -23,11 +23,30 @@ evaluation_models:
 
 # Generation models (for question generation and solving)
 generation_models:
+  # Challenger model - can be powerful external models like GPT or Claude
   challenger:
-    provider: "openai"
+    provider: "openai"  # Options: "openai", "anthropic", "ollama", "docker"
     config:
-      base_url: "http://localhost:12434/engines/llama.cpp/v1"
-      model_name: "ai/llama3.2"
+      base_url: "https://api.openai.com/v1"  # Use external API
+      model_name: "gpt-4o"  # Can be gpt-4o, gpt-4-turbo, claude-3-opus, etc.
+      api_key: "${OPENAI_API_KEY}"  # Will be replaced by environment variable
+      max_tokens: 4096
+      temperature: 0.7
+  
+  # Alternative challenger configurations (uncomment to use)
+  # challenger_claude:
+  #   provider: "anthropic"
+  #   config:
+  #     base_url: "https://api.anthropic.com"
+  #     model_name: "claude-3-opus-20240229"
+  #     api_key: "${ANTHROPIC_API_KEY}"
+  #     max_tokens: 4096
+  
+  # challenger_local:
+  #   provider: "openai"
+  #   config:
+  #     base_url: "http://localhost:12434/engines/llama.cpp/v1"
+  #     model_name: "ai/llama3.2"
   
   solver:
     provider: "openai"
@@ -44,3 +63,10 @@ timeouts:
 retry:
   max_attempts: 3
   backoff_factor: 2.0
+
+# LangSmith Integration for Experiment Tracking
+langsmith:
+  api_key: "${LANGSMITH_API_KEY}"  # Will be replaced by environment variable
+  project: "rzero-training"
+  endpoint: "https://api.smith.langchain.com"
+  enabled: true

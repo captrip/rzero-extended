@@ -24,8 +24,28 @@ from backend.training.real_training_manager import RealTrainingManager, RealTrai
 
 
 # Pydantic models for API
+class ChallengerConfig(BaseModel):
+    mode: str  # 'preset', 'external', 'custom'
+    preset: Optional[str] = None
+    provider: Optional[str] = None
+    model_name: Optional[str] = None
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+
+
+class SolverConfig(BaseModel):
+    mode: str  # 'preset', 'custom'
+    preset: Optional[str] = None
+    provider: Optional[str] = None
+    model_name: Optional[str] = None
+    base_url: Optional[str] = None
+    api_key: Optional[str] = None
+
+
 class TrainingConfigRequest(BaseModel):
     base_model: str
+    challenger_config: Optional[ChallengerConfig] = None
+    solver_config: Optional[SolverConfig] = None
     experiment_name: str
     storage_path: str = "./storage"
     huggingface_name: str = "test-user"
@@ -692,6 +712,144 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
     finally:
         websocket_manager.disconnect(websocket)
+
+
+# Model Testing Endpoints
+
+@app.post("/api/test-challenger")
+async def test_challenger(config: ChallengerConfig):
+    """Test challenger model connection"""
+    try:
+        # Add project root to path for imports
+        project_root = Path(__file__).parent.parent
+        sys.path.insert(0, str(project_root))
+        
+        from llm_clients.external_model_client import ExternalModelClient
+        
+        # Create client based on config
+        if config.mode == 'preset':
+            # Handle preset configurations
+            preset_configs = {
+                'local_llama': {
+                    'provider': 'openai',
+                    'base_url': 'http://localhost:12434/engines/llama.cpp/v1',
+                    'model_name': 'ai/llama3.2',
+                    'api_key': 'dummy'
+                },
+                'ollama_llama': {
+                    'provider': 'ollama',
+                    'base_url': 'http://localhost:11434/v1',
+                    'model_name': 'llama3.2',
+                    'api_key': 'dummy'
+                },
+                'ollama_qwen': {
+                    'provider': 'ollama',
+                    'base_url': 'http://localhost:11434/v1',
+                    'model_name': 'qwen2.5:14b',
+                    'api_key': 'dummy'
+                }
+            }
+            
+            if config.preset not in preset_configs:
+                return {"success": False, "error": f"Unknown preset: {config.preset}"}
+            
+            client_config = preset_configs[config.preset]
+            client = ExternalModelClient(client_config['provider'], {
+                'base_url': client_config['base_url'],
+                'model_name': client_config['model_name'],
+                'api_key': client_config['api_key']
+            })
+        
+        else:
+            # Handle external/custom configurations
+            client_config = {
+                'base_url': config.base_url,
+                'model_name': config.model_name,
+                'api_key': config.api_key or 'dummy'
+            }
+            
+            if config.provider == 'anthropic':
+                client_config.pop('base_url', None)  # Anthropic doesn't need base_url
+            
+            client = ExternalModelClient(config.provider or 'openai', client_config)
+        
+        # Test connection
+        success = client.test_connection()
+        
+        if success:
+            return {"success": True, "message": "Connection successful"}
+        else:
+            return {"success": False, "error": "Connection test failed"}
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/test-solver")
+async def test_solver(config: SolverConfig):
+    """Test solver model connection"""
+    try:
+        # Add project root to path for imports
+        project_root = Path(__file__).parent.parent
+        sys.path.insert(0, str(project_root))
+        
+        from openai import OpenAI
+        
+        # Create client based on config
+        if config.mode == 'preset':
+            # Handle preset configurations
+            preset_configs = {
+                'local_llama': {
+                    'base_url': 'http://localhost:12434/engines/llama.cpp/v1',
+                    'model_name': 'ai/llama3.2'
+                },
+                'ollama_llama': {
+                    'base_url': 'http://localhost:11434/v1',
+                    'model_name': 'llama3.2'
+                },
+                'distilgpt2': {
+                    'base_url': 'http://localhost:12434/engines/llama.cpp/v1',
+                    'model_name': 'distilgpt2'
+                },
+                'flan_t5_small': {
+                    'base_url': 'http://localhost:12434/engines/llama.cpp/v1',
+                    'model_name': 'google/flan-t5-small'
+                }
+            }
+            
+            if config.preset not in preset_configs:
+                return {"success": False, "error": f"Unknown preset: {config.preset}"}
+            
+            client_config = preset_configs[config.preset]
+            client = OpenAI(
+                base_url=client_config['base_url'],
+                api_key='dummy'
+            )
+            model_name = client_config['model_name']
+            
+        else:
+            # Handle custom configuration
+            client = OpenAI(
+                base_url=config.base_url,
+                api_key=config.api_key or 'dummy'
+            )
+            model_name = config.model_name
+        
+        # Test with a simple completion request
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[{"role": "user", "content": "Hello, respond with OK"}],
+            max_tokens=10,
+            temperature=0
+        )
+        
+        if response.choices and response.choices[0].message.content:
+            return {"success": True, "message": "Connection successful"}
+        else:
+            return {"success": False, "error": "No response from model"}
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 def main():
